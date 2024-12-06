@@ -1,5 +1,4 @@
 import { useState } from "preact/hooks";
-import { JSX } from "preact/jsx-runtime";
 
 const FormToEnvelope = () => {
   const [formData, setFormData] = useState({

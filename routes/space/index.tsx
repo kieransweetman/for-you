@@ -1,4 +1,4 @@
-import { FreshContext, Handlers, PageProps } from "$fresh/server.ts";
+import { FreshContext } from "$fresh/server.ts";
 import FormToEnvelope from "../../islands/FormEnvelop.tsx";
 import { getMessages } from "../../db/db.ts";
 interface Message {
