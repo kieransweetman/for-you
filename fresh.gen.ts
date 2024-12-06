@@ -10,7 +10,6 @@ import * as $greet_name_ from "./routes/greet/[name].tsx";
 import * as $index from "./routes/index.tsx";
 import * as $space_index from "./routes/space/index.tsx";
 import * as $Counter from "./islands/Counter.tsx";
-import * as $FormEnvelop from "./islands/FormEnvelop.tsx";
 import * as $MessageFormDialog from "./islands/MessageFormDialog.tsx";
 import * as $Typewriter from "./islands/Typewriter.tsx";
 import * as $TypewriterIntro from "./islands/TypewriterIntro.tsx";
@@ -28,7 +27,6 @@ const manifest = {
   },
   islands: {
     "./islands/Counter.tsx": $Counter,
-    "./islands/FormEnvelop.tsx": $FormEnvelop,
     "./islands/MessageFormDialog.tsx": $MessageFormDialog,
     "./islands/Typewriter.tsx": $Typewriter,
     "./islands/TypewriterIntro.tsx": $TypewriterIntro,

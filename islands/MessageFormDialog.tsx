@@ -2,7 +2,7 @@ import { Dialog } from "@headlessui/react";
 import { useState } from "react-dom";
 import { Button } from "@/components/Button.tsx";
 
-export default function Example() {
+export default function MessageForm() {
   const [isOpen, setIsOpen] = useState(false);
 
   const handleDialog = () => {
