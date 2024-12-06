@@ -50,6 +50,9 @@ export default function TypewriterIntro() {
     useEffect(() => {
         if (skip) {
             setCurrentMessageIndex(messages.length); // Set index beyond the last message
+            setTimeout(() => {
+                globalThis.location.href = "/space";
+            }, 1500);
         }
     }, [skip]);
 
