@@ -1,7 +1,13 @@
 import { IS_BROWSER } from "$fresh/runtime.ts";
 import * as THREE from "@3d/three";
 
-import { createContext, useContext, useEffect, useRef, useState } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react-dom";
 
 const ThreeContext = createContext<typeof THREE | null>(null);
 
@@ -14,26 +20,16 @@ function ThreeProvider({ children }: { children: React.ReactNode }) {
 
   const [value, setValue] = useState<typeof THREE | null>(null);
 
-  return (
-    <>
-      <div className="">
-        <ThreeContext.Provider value={value}>
-          {children}
-        </ThreeContext.Provider>
-        {children}
-      </div>
+  useEffect(() => {
+    if (!value) {
+      setValue(THREE);
+    }
+  }, [THREE]);
 
-      <script
-        src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"
-        onLoad={() => {
-          // @ts-ignore
-          setValue(window.THREE);
-          //remove all other instaneces of three on the window object
-        }}
-        defer
-      >
-      </script>
-    </>
+  return (
+    <ThreeContext.Provider value={value}>
+      {children}
+    </ThreeContext.Provider>
   );
 }
 
@@ -41,14 +37,16 @@ function CanvasComponent() {
   const three = useContext(ThreeContext);
   const canvasRef = useRef<HTMLDivElement>(null);
   if (!three) return <div>Component placeholder</div>;
-  console.log(three);
 
   useEffect(() => {
-    const width = window.innerWidth;
-    const height = window.innerHeight;
+    const width = globalThis.innerWidth;
+    const height = globalThis.innerHeight;
 
     // camera
     const camera = new THREE.PerspectiveCamera(70, width / height, 0.01, 10);
+
+    // @ts-ignore: `position` does not exist, but it does. not sure why
+    // TODO understand type error & fix
     camera.position.z = 1;
 
     //scene
@@ -66,8 +64,6 @@ function CanvasComponent() {
     // renderer
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(width, height);
-    // Set background to transparent
-    // renderer.setClearColor(0x000000, 0);
 
     canvasRef.current?.appendChild(renderer.domElement);
 
@@ -75,14 +71,15 @@ function CanvasComponent() {
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
 
+    // Mouse move event listener
     if (canvasRef) {
       canvasRef.current?.addEventListener("mousemove", onMouseMove, false);
     }
 
     function onMouseMove(event: MouseEvent) {
       // Calculate mouse position in normalized device coordinates (-1 to +1) for both components
-      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+      mouse.x = (event.clientX / width) * 2 - 1;
+      mouse.y = -(event.clientY / height) * 2 + 1;
     }
 
     const animate = () => {
@@ -98,8 +95,10 @@ function CanvasComponent() {
 
       // requestAnimationFrame(animate);
 
+      // @ts-ignore: rotation doesn't exist on `mesh` when it should
       // Rotate the mesh
       mesh.rotation.x += 0.01;
+      // @ts-ignore: see above comment
       mesh.rotation.y += 0.01;
 
       renderer.render(scene, camera);
@@ -107,9 +106,10 @@ function CanvasComponent() {
 
     renderer.setAnimationLoop(animate);
   }, [canvasRef]);
+
   return (
     <div
-      id="canvas"
+      id="canvas-container"
       className="absolute top-0 bottom-0 left-0  h-[100vh] w-[100vw] z-10"
       ref={canvasRef}
     >
@@ -123,7 +123,7 @@ export default function CanvasIsland(
   return (
     <ThreeProvider>
       <CanvasComponent />
-      {children && children}
+      {children}
     </ThreeProvider>
   );
 }
