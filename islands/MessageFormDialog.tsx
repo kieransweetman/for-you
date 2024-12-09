@@ -37,7 +37,7 @@ export default function MessageForm() {
   };
 
   return (
-    <>
+    <div className="z-50">
       <Button onClick={handleDialog}>
         Open dialog
       </Button>
@@ -47,7 +47,7 @@ export default function MessageForm() {
         className="relative z-50"
       >
         <div className="fixed inset-0 flex items-center justify-center p-4">
-          <Dialog.Panel className="max-w-lg space-y-4 border bg-white p-12">
+          <Dialog.Panel className="max-w-lg space-y-4 border bg-blue-600 p-12">
             <Dialog.Title className="text-lg font-medium">
               Dialog Title
             </Dialog.Title>
@@ -113,6 +113,6 @@ export default function MessageForm() {
           </Dialog.Panel>
         </div>
       </Dialog>
-    </>
+    </div>
   );
 }

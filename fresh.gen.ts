@@ -9,6 +9,7 @@ import * as $api_message from "./routes/api/message.ts";
 import * as $greet_name_ from "./routes/greet/[name].tsx";
 import * as $index from "./routes/index.tsx";
 import * as $space_index from "./routes/space/index.tsx";
+import * as $CanvasIsland from "./islands/CanvasIsland.tsx";
 import * as $Counter from "./islands/Counter.tsx";
 import * as $MessageFormDialog from "./islands/MessageFormDialog.tsx";
 import * as $Typewriter from "./islands/Typewriter.tsx";
@@ -26,6 +27,7 @@ const manifest = {
     "./routes/space/index.tsx": $space_index,
   },
   islands: {
+    "./islands/CanvasIsland.tsx": $CanvasIsland,
     "./islands/Counter.tsx": $Counter,
     "./islands/MessageFormDialog.tsx": $MessageFormDialog,
     "./islands/Typewriter.tsx": $Typewriter,
