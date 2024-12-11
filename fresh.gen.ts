@@ -9,11 +9,13 @@ import * as $api_message from "./routes/api/message.ts";
 import * as $greet_name_ from "./routes/greet/[name].tsx";
 import * as $index from "./routes/index.tsx";
 import * as $space_index from "./routes/space/index.tsx";
-import * as $CanvasIsland from "./islands/CanvasIsland.tsx";
 import * as $Counter from "./islands/Counter.tsx";
 import * as $MessageFormDialog from "./islands/MessageFormDialog.tsx";
 import * as $Typewriter from "./islands/Typewriter.tsx";
 import * as $TypewriterIntro from "./islands/TypewriterIntro.tsx";
+import * as $canvas_CanvasComponent from "./islands/canvas/CanvasComponent.tsx";
+import * as $canvas_CanvasIsland from "./islands/canvas/CanvasIsland.tsx";
+import * as $canvas_ThreeProvider from "./islands/canvas/ThreeProvider.tsx";
 import type { Manifest } from "$fresh/server.ts";
 
 const manifest = {
@@ -27,11 +29,13 @@ const manifest = {
     "./routes/space/index.tsx": $space_index,
   },
   islands: {
-    "./islands/CanvasIsland.tsx": $CanvasIsland,
     "./islands/Counter.tsx": $Counter,
     "./islands/MessageFormDialog.tsx": $MessageFormDialog,
     "./islands/Typewriter.tsx": $Typewriter,
     "./islands/TypewriterIntro.tsx": $TypewriterIntro,
+    "./islands/canvas/CanvasComponent.tsx": $canvas_CanvasComponent,
+    "./islands/canvas/CanvasIsland.tsx": $canvas_CanvasIsland,
+    "./islands/canvas/ThreeProvider.tsx": $canvas_ThreeProvider,
   },
   baseUrl: import.meta.url,
 } satisfies Manifest;

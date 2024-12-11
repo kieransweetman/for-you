@@ -1,4 +1,4 @@
-import TypewriterIntro from "../islands/TypewriterIntro.tsx";
+import TypewriterIntro from "@/islands/TypewriterIntro.tsx";
 
 export default function Home() {
   return (

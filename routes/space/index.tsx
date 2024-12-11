@@ -1,7 +1,7 @@
 import { FreshContext } from "$fresh/server.ts";
-import { getMessages } from "../../db/db.ts";
-import MessageForm from "../../islands/MessageFormDialog.tsx";
-import CanvasIsland from "../../islands/CanvasIsland.tsx";
+import { getMessages } from "@/db/db.ts";
+import MessageForm from "@/islands/MessageFormDialog.tsx";
+import CanvasIsland from "@/islands/canvas/CanvasIsland.tsx";
 
 export default async function SpaceIndex(_req: Request, ctx: FreshContext) {
   const messages = await getMessages();

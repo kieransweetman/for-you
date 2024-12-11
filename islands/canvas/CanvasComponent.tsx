@@ -1,39 +1,10 @@
-import { IS_BROWSER } from "$fresh/runtime.ts";
 import * as THREE from "@3d/three";
+import { ThreeContext } from "@/islands/canvas/ThreeProvider.tsx";
+import { GLTFLoader } from "@3d/three/addons/";
 
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from "react-dom";
+import { useContext, useEffect, useRef } from "react-dom";
 
-const ThreeContext = createContext<typeof THREE | null>(null);
-
-function ThreeProvider({ children }: { children: React.ReactNode }) {
-  if (!IS_BROWSER) {
-    return (
-      <p>Three js must be loaded on the client. No children will render</p>
-    );
-  }
-
-  const [value, setValue] = useState<typeof THREE | null>(null);
-
-  useEffect(() => {
-    if (!value) {
-      setValue(THREE);
-    }
-  }, [THREE]);
-
-  return (
-    <ThreeContext.Provider value={value}>
-      {children}
-    </ThreeContext.Provider>
-  );
-}
-
-function CanvasComponent() {
+export default function CanvasComponent() {
   const three = useContext(ThreeContext);
   const canvasRef = useRef<HTMLDivElement>(null);
   if (!three) return <div>Component placeholder</div>;
@@ -71,6 +42,22 @@ function CanvasComponent() {
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
 
+    //loader
+    const loader = new GLTFLoader();
+    let arrowModel: THREE.Group | null = null;
+    loader.load(
+      "/Direction Arrow.glb",
+      function (gltf) {
+        arrowModel = gltf.scene;
+        gltf.scene.scale.set(0.3, 0.4, 0.5);
+        scene.add(gltf.scene);
+      },
+      undefined,
+      function (error) {
+        console.error(error);
+      },
+    );
+
     // Mouse move event listener
     if (canvasRef) {
       canvasRef.current?.addEventListener("mousemove", onMouseMove, false);
@@ -91,6 +78,11 @@ function CanvasComponent() {
         intersects[0].object.material.color.set(0xff0000);
       } else {
         mesh.material.color.set(0x00ff00);
+      }
+
+      if (arrowModel) {
+        arrowModel.rotation.y += 0.01;
+        arrowModel.rotation.x += 0.01;
       }
 
       // requestAnimationFrame(animate);
@@ -114,16 +106,5 @@ function CanvasComponent() {
       ref={canvasRef}
     >
     </div>
-  );
-}
-
-export default function CanvasIsland(
-  { children }: { children?: React.ReactNode },
-) {
-  return (
-    <ThreeProvider>
-      <CanvasComponent />
-      {children}
-    </ThreeProvider>
   );
 }
