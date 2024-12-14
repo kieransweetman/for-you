@@ -1,12 +1,12 @@
 import * as THREE from "@3d/three";
 import { ThreeContext } from "@/islands/canvas/ThreeProvider.tsx";
-import { GLTFLoader } from "@3d/three/addons/";
 
 import { useContext, useEffect, useRef } from "react-dom";
 
 export default function CanvasComponent() {
   const three = useContext(ThreeContext);
   const canvasRef = useRef<HTMLDivElement>(null);
+
   if (!three) return <div>Component placeholder</div>;
 
   useEffect(() => {
@@ -14,15 +14,26 @@ export default function CanvasComponent() {
     const height = globalThis.innerHeight;
 
     // camera
-    const camera = new THREE.PerspectiveCamera(70, width / height, 0.01, 10);
+    const camera = new THREE.PerspectiveCamera(
+      70,
+      width / height,
+      0.01,
+      10000000,
+    );
 
     // @ts-ignore: `position` does not exist, but it does. not sure why
     // TODO understand type error & fix
-    camera.position.z = 1;
+    camera.position.z = 5;
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(width, height);
+
+    canvasRef.current?.appendChild(renderer.domElement);
 
     //scene
     const scene = new THREE.Scene();
     // to slight gray
+
     scene.background = new THREE.Color(0.1, 0.1, 0.1);
 
     // geometry
@@ -33,43 +44,22 @@ export default function CanvasComponent() {
     scene.add(mesh);
 
     // renderer
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(width, height);
-
-    canvasRef.current?.appendChild(renderer.domElement);
-
     // Raycaster and mouse vector
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
 
-    //loader
-    const loader = new GLTFLoader();
-    let arrowModel: THREE.Group | null = null;
-    loader.load(
-      "/Direction Arrow.glb",
-      function (gltf) {
-        arrowModel = gltf.scene;
-        gltf.scene.scale.set(0.3, 0.4, 0.5);
-        scene.add(gltf.scene);
-      },
-      undefined,
-      function (error) {
-        console.error(error);
-      },
-    );
-
     // Mouse move event listener
+    const onMouseMove = (event: MouseEvent) => {
+      // Calculate mouse position in normalized device coordinates (-1 to +1) for both components
+      mouse.x = (event.clientX / width) * 2 - 1;
+      mouse.y = -(event.clientY / height) * 2 + 1;
+    };
     if (canvasRef) {
       canvasRef.current?.addEventListener("mousemove", onMouseMove, false);
     }
 
-    function onMouseMove(event: MouseEvent) {
-      // Calculate mouse position in normalized device coordinates (-1 to +1) for both components
-      mouse.x = (event.clientX / width) * 2 - 1;
-      mouse.y = -(event.clientY / height) * 2 + 1;
-    }
-
     const animate = () => {
+      requestAnimationFrame(animate);
       raycaster.setFromCamera(mouse, camera);
       const intersects = raycaster.intersectObjects(scene.children);
 
@@ -80,10 +70,26 @@ export default function CanvasComponent() {
         mesh.material.color.set(0x00ff00);
       }
 
-      if (arrowModel) {
-        arrowModel.rotation.y += 0.01;
-        arrowModel.rotation.x += 0.01;
-      }
+      // if (arrowModel) {
+      //   // arrowModel.rotation.y += 0.01;
+      //   arrowModel.position.x += 0.01;
+
+      //   // Check if the model has left the scene and warp it to the opposite side
+      //   if (arrowModel.position.x > boundary.maxX) {
+      //     arrowModel.position.x = boundary.minX;
+      //   }
+      //   if (arrowModel.position.x < boundary.minX) {
+      //     arrowModel.position.x = boundary.maxX;
+      //   }
+      //   if (arrowModel.position.y > boundary.maxY) {
+      //     arrowModel.position.y = boundary.minY;
+      //   }
+      //   if (arrowModel.position.y < boundary.minY) {
+      //     arrowModel.position.y = boundary.maxY;
+      //   }
+      //   // if (arrowModel.position.z > boundary.maxX) arrowModel.position.z = -1;
+      //   // if (arrowModel.position.z < boundary.maxX) arrowModel.position.z = 1;
+      // }
 
       // requestAnimationFrame(animate);
 
@@ -92,17 +98,16 @@ export default function CanvasComponent() {
       mesh.rotation.x += 0.01;
       // @ts-ignore: see above comment
       mesh.rotation.y += 0.01;
-
       renderer.render(scene, camera);
     };
 
-    renderer.setAnimationLoop(animate);
+    animate();
   }, [canvasRef]);
 
   return (
     <div
       id="canvas-container"
-      className="absolute top-0 bottom-0 left-0  h-[100vh] w-[100vw] z-10"
+      className="absolute top-0 bottom-0 left-0 h-[100vh] w-[100vw] z-10"
       ref={canvasRef}
     >
     </div>
