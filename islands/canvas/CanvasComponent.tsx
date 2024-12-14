@@ -2,10 +2,13 @@ import * as THREE from "@3d/three";
 import { ThreeContext } from "@/islands/canvas/ThreeProvider.tsx";
 
 import { useContext, useEffect, useRef } from "react-dom";
+import BoidManager from "@/lib/BoidManager.ts";
 
 export default function CanvasComponent() {
   const three = useContext(ThreeContext);
   const canvasRef = useRef<HTMLDivElement>(null);
+
+  const boidManager = new BoidManager();
 
   if (!three) return <div>Component placeholder</div>;
 
@@ -33,8 +36,15 @@ export default function CanvasComponent() {
     //scene
     const scene = new THREE.Scene();
     // to slight gray
-
     scene.background = new THREE.Color(0.1, 0.1, 0.1);
+
+    //Boids
+    boidManager.initBoids(scene, 100, new THREE.Vector3(0, 0, 0));
+    boidManager.boids.forEach((boid) => {
+      scene.add(boid.mesh);
+    });
+
+    // TODO remove this model sometime soon (below this comment)
 
     // geometry
     const geometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
