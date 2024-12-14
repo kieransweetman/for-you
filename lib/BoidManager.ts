@@ -2,55 +2,32 @@ import Boid from "@/lib/Boid.ts";
 import * as THREE from "@3d/three";
 
 export default class BoidManager {
-  boids;
+  boids: Boid[];
 
   constructor() {
     this.boids = [];
-    this.initBoids();
   }
 
-  addBoid(boid) {
-    this.boids.push(boid);
-  }
-
-  update() {
+  update(
+    delta: number,
+    bounds: { minX: number; maxX: number; minY: number; maxY: number },
+  ) {
     for (const boid of this.boids) {
-      boid.update(this.boids);
+      boid.update(delta, bounds);
     }
   }
 
-  initBoids(scene: THREE.Scene, numberOfBoids: number, target: THREE.Vector3) {
+  initBoids(scene: THREE.Scene, numberOfBoids: number) {
     this.boids = this.boids || [];
 
-    let randomX, randomY, randomZ, colour, followTarget, quaternion;
+    let color;
 
     for (let i = 0; i < numberOfBoids; i++) {
-      randomX = Math.random() * 250 - 125;
-      randomY = Math.random() * 250 - 125;
-      randomZ = Math.random() * 250 - 125;
-      colour = null; // will use default color in getBoid
-      followTarget = false;
-      quaternion = null;
-
-      // reference boid
-      if (i === 0) {
-        randomX = 0;
-        randomY = 0;
-        randomZ = 0;
-        colour = 0xe56289;
-        // followTarget = true
-        quaternion = null;
-      }
-
-      let position = new THREE.Vector3(randomX, randomY, randomZ);
+      color = null; // will use default color in getBoid
 
       const boid = new Boid(
         scene,
-        target,
-        position,
-        quaternion,
-        colour,
-        followTarget,
+        color,
       );
       this.boids.push(boid);
     }

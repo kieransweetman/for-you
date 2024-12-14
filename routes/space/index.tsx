@@ -9,7 +9,7 @@ export default async function SpaceIndex(_req: Request, ctx: FreshContext) {
   return (
     <div class="relative flex flex-col gap-5 justify-center items-center  h-[100vh] w-[50vw]">
       <div className="flex flex-col overflow-y-auto h-[80%] z-[100]">
-        {messages
+        {false
           ? messages?.map(({ to, from, message }) => (
             <div class=" p-4 m-4 rounded-lg">
               <h2 class="text-xl font-semibold">{to}</h2>
@@ -20,7 +20,7 @@ export default async function SpaceIndex(_req: Request, ctx: FreshContext) {
           : null}
       </div>
       <CanvasIsland />
-      <MessageForm />
+      {/* <MessageForm /> */}
     </div>
   );
 }
