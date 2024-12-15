@@ -1,5 +1,7 @@
 import * as THREE from "@3d/three";
-import TriangleBoid from "@/lib/TriangleBoid.ts";
+
+const minSpeed = 0.35;
+const maxSpeed = 2;
 
 const width = globalThis.innerWidth;
 const height = globalThis.innerHeight;
@@ -38,7 +40,7 @@ export default class Boid {
     this.scene = scene;
 
     const { mesh, geometry } = this.getBoid(color);
-    this.mesh = mesh;
+    this._mesh = mesh;
 
     // randomize starting position
     //@ts-ignore - position does not exist on mesh, but it does
@@ -180,7 +182,7 @@ export default class Boid {
 
   // Method to apply a force to the boid
   applyForce(force: THREE.Vector3) {
-    this._acceleration.add(force);
+    this.acceleration.add(force);
   }
 
   // Method to calculate the separation force
@@ -231,7 +233,12 @@ export default class Boid {
 
     // Update velocity and position
     this._velocity.add(this._acceleration);
-    this._velocity.clampLength(0, this._maxSpeed);
+    this._velocity.clampLength(0, maxSpeed);
+    // Ensure the boid never goes below a certain speed
+    if (this._velocity.length() < minSpeed) {
+      this._velocity.normalize().multiplyScalar(minSpeed);
+    }
+
     this._mesh.position.add(this._velocity.clone().multiplyScalar(delta));
     this._acceleration.set(0, 0, 0);
 

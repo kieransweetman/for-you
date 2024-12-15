@@ -58,22 +58,21 @@ export default class TriangleBoid extends Boid {
     const mesh = new THREE.Mesh(geometry, material);
 
     // Create the detection circle outline
-    if (this.isRefBoid) {
-      const circleGeometry = new THREE.CircleGeometry(1, 32); // Adjust the radius as needed
-      this.detectionRadius = 1;
-      const edgesGeometry = new THREE.EdgesGeometry(circleGeometry);
-      const edgesMaterial = new THREE.LineBasicMaterial({
-        color: 0xffff00,
-        transparent: true,
-        opacity: 0.5,
-      });
-      const detectionCircle = new THREE.LineSegments(
-        edgesGeometry,
-        edgesMaterial,
-      );
-      detectionCircle.position.z = -0.01; // Slightly behind the boid to avoid z-fighting
+    const circleGeometry = new THREE.CircleGeometry(.5, 32); // Adjust the radius as needed
+    this.detectionRadius = .5;
+    const edgesGeometry = new THREE.EdgesGeometry(circleGeometry);
+    const edgesMaterial = new THREE.LineBasicMaterial({
+      color: 0xffff00,
+      transparent: true,
+      opacity: 0.5,
+    });
+    const detectionCircle = new THREE.LineSegments(
+      edgesGeometry,
+      edgesMaterial,
+    );
+    detectionCircle.position.z = -0.01; // Slightly behind the boid to avoid z-fighting
 
-      // Add the detection circle as a child of the boid's mesh
+    if (this.isRefBoid) {
       mesh.add(detectionCircle);
     }
 
