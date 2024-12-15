@@ -1,22 +1,9 @@
 import * as THREE from "@3d/three";
+import TriangleBoid from "@/lib/TriangleBoid.ts";
 
-const minSpeed = 1;
-const maxSpeed = 5;
-
-const numSamplesForSmoothing = 20;
-
-const wanderWeight = 0.2;
-// Steer towards the average position of nearby boids
-const cohesionWeight = 1;
-// Steers away from nearby boids
-const separationWeight = 1;
-// Adopt the average velocity of bearby boids
-const alignmentWeight = 1;
-
-const visionRange = 150;
-
-const origin = new THREE.Vector3();
-const boundaryRadius = 370;
+const width = globalThis.innerWidth;
+const height = globalThis.innerHeight;
+const aspect = width / height;
 
 export default class Boid {
   _scene: any;
@@ -30,25 +17,28 @@ export default class Boid {
   _maxSpeed: number;
   counter: number;
   wanderCounter: number;
+  detectionRadius?: number;
+  detectionCircle?: THREE.Mesh;
+  isRefBoid?: boolean = false;
+  lines: Map<number, THREE.Line>;
+  boidRadius: number = 0.2;
 
   constructor(
     scene: THREE.Scene,
     color: number | null,
   ) {
-    const width = globalThis.innerWidth;
-    const height = globalThis.innerHeight;
-    const aspect = width / height;
-
     this._position = new THREE.Vector3();
     this._velocity = new THREE.Vector3();
     this._acceleration = new THREE.Vector3();
     this._maxForce = 0.1;
     this._maxSpeed = 4;
+    this.lines = new Map();
+    this.detectionRadius = 2;
 
     this.scene = scene;
 
     const { mesh, geometry } = this.getBoid(color);
-    this._mesh = mesh;
+    this.mesh = mesh;
 
     // randomize starting position
     //@ts-ignore - position does not exist on mesh, but it does
@@ -63,7 +53,7 @@ export default class Boid {
     // velocity is speed in a given direction, and in the update method we'll
     // compute an acceleration that will change the velocity
     this.velocity = new THREE.Vector3(
-      (Math.random() - 0.5) * 2,
+      (Math.random() - 0.5) * 3,
       (Math.random() - 0.5) * 2,
       0,
     );
@@ -87,6 +77,41 @@ export default class Boid {
     this.mesh = new THREE.Mesh(this.geometry, material);
 
     return { mesh: this.mesh, geometry: this.geometry };
+  }
+
+  // Method to check if another boid is within the detection radius
+  isWithinDetectionRange(otherBoid: Boid): boolean {
+    const distance = this.mesh.position.distanceTo(otherBoid.mesh.position);
+    const combinedRadius = this.detectionRadius + otherBoid.boidRadius;
+    return distance <= combinedRadius;
+  }
+
+  // Method to draw a line between the reference boid and the foreign boid
+  drawLineTo(otherBoid: Boid) {
+    if (!this.isRefBoid) return;
+
+    if (this.lines.has(otherBoid)) {
+      this._scene.remove(this.lines.get(otherBoid)!);
+      this.lines.delete(otherBoid);
+    }
+
+    const material = new THREE.LineBasicMaterial({ color: 0xff0000 });
+    const points = [];
+    points.push(this._mesh.position.clone());
+    points.push(otherBoid._mesh.position.clone());
+
+    const geometry = new THREE.BufferGeometry().setFromPoints(points);
+    const line = new THREE.Line(geometry, material);
+    this.lines.set(otherBoid, line);
+    this._scene.add(line);
+  }
+
+  // Method to remove the line between the reference boid and the foreign boid
+  removeLineTo(otherBoid: Boid) {
+    if (this.lines.has(otherBoid)) {
+      this._scene.remove(this.lines.get(otherBoid)!);
+      this.lines.delete(otherBoid);
+    }
   }
 
   get scene() {
@@ -153,37 +178,78 @@ export default class Boid {
     return this._maxSpeed;
   }
 
+  // Method to apply a force to the boid
+  applyForce(force: THREE.Vector3) {
+    this._acceleration.add(force);
+  }
+
+  // Method to calculate the separation force
+  separation(boids: Boid[]): THREE.Vector3 {
+    const steer = new THREE.Vector3();
+    let count = 0;
+
+    for (const other of boids) {
+      if (other !== this && this.isWithinDetectionRange(other)) {
+        const distance = this.mesh.position.distanceTo(other.mesh.position);
+        const diff = new THREE.Vector3().subVectors(
+          this.mesh.position,
+          other.mesh.position,
+        );
+        diff.normalize();
+        diff.divideScalar(distance); // Weight by distance
+        steer.add(diff);
+        count++;
+      }
+    }
+
+    if (count > 0) {
+      steer.divideScalar(count);
+    }
+
+    if (steer.length() > 0) {
+      steer.normalize();
+      steer.multiplyScalar(this._maxSpeed);
+      steer.sub(this._velocity);
+      steer.clampLength(0, this._maxForce);
+    }
+
+    return steer;
+  }
+
+  // Updated method to include separation rule
   update(
     delta: number,
     bounds: { minX: number; maxX: number; minY: number; maxY: number },
+    boids: Boid[],
   ) {
     this.counter++;
     this.wanderCounter++;
 
-    //@ts-ignore - position does not exist on mesh, but it does
-    // TODO: understand type error & fix
-    this.mesh.position.add(this.velocity.clone().multiplyScalar(delta));
+    // Apply separation force
+    const separationForce = this.separation(boids);
+    this.applyForce(separationForce);
 
-    // Teleport to the opposite side if the boid crosses the boundary
+    // Update velocity and position
+    this._velocity.add(this._acceleration);
+    this._velocity.clampLength(0, this._maxSpeed);
+    this._mesh.position.add(this._velocity.clone().multiplyScalar(delta));
+    this._acceleration.set(0, 0, 0);
 
-    // ignore all ts errors in this block
-    //@ts-ignore - position does not exist on mesh, but it does
-    if (this.mesh.position.x < bounds.minX) {
-      //@ts-ignore - position does not exist on mesh, but it does
-      this.mesh.position.x = bounds.maxX;
-      //@ts-ignore - position does not exist on mesh, but it does
-    } else if (this.mesh.position.x > bounds.maxX) {
-      //@ts-ignore - position does not exist on mesh, but it does
-      this.mesh.position.x = bounds.minX;
+    // Toroidal wrapping
+    if (this._mesh.position.x < bounds.minX) {
+      this._mesh.position.x = bounds.maxX;
+    } else if (this._mesh.position.x > bounds.maxX) {
+      this._mesh.position.x = bounds.minX;
     }
-    //@ts-ignore - position does not exist on mesh, but it does
-    if (this.mesh.position.y < bounds.minY) {
-      //@ts-ignore - position does not exist on mesh, but it does
-      this.mesh.position.y = bounds.maxY;
-      //@ts-ignore - position does not exist on mesh, but it does
-    } else if (this.mesh.position.y > bounds.maxY) {
-      //@ts-ignore - position does not exist on mesh, but it
-      this.mesh.position.y = bounds.minY;
+
+    if (this._mesh.position.y < bounds.minY) {
+      this._mesh.position.y = bounds.maxY;
+    } else if (this._mesh.position.y > bounds.maxY) {
+      this._mesh.position.y = bounds.minY;
     }
+
+    // Rotate the boid to face the direction of its velocity
+    const angle = Math.atan2(this._velocity.y, this._velocity.x);
+    this._mesh.rotation.z = angle - Math.PI / 2;
   }
 }

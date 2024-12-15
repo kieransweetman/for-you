@@ -59,8 +59,9 @@ export default function CanvasComponent() {
     scene.background = new THREE.Color(0.1, 0.1, 0.1);
 
     //Boids
-    const numOfBoids = IS_MOBILE ? 300 : 500;
-    boidManager.initBoids(scene, numOfBoids);
+    const numOfBoids = IS_MOBILE ? 30 : 450;
+    const boidType = "triangle";
+    boidManager.initBoids(scene, numOfBoids, boidType);
     boidManager.boids.forEach((boid) => {
       scene.add(boid.mesh);
     });
