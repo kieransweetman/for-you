@@ -25,6 +25,14 @@ export default class BoidManager {
     for (let i = 0; i < numberOfBoids; i++) {
       color = null; // will use default color in getBoid
 
+      // reference boid
+
+      if (i === 0) {
+        // reference boid is red
+        color = 0xff0000;
+        // also show the circum of the boids 'range'
+      }
+
       const boid = new Boid(
         scene,
         color,

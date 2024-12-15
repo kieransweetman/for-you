@@ -7,6 +7,11 @@ import BoidManager from "@/lib/BoidManager.ts";
 // Import stats.js from a CDN
 import Stats from "https://cdn.jsdelivr.net/npm/three@0.132.2/examples/jsm/libs/stats.module.js";
 
+const width = globalThis.innerWidth;
+const height = globalThis.innerHeight;
+const aspect = width / height;
+const IS_MOBILE = width < 768;
+
 export default function CanvasComponent() {
   const three = useContext(ThreeContext);
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -16,10 +21,6 @@ export default function CanvasComponent() {
   if (!three) return <div>Component placeholder</div>;
 
   useEffect(() => {
-    const width = globalThis.innerWidth;
-    const height = globalThis.innerHeight;
-    const aspect = width / height;
-
     // camera
     const camera = new THREE.OrthographicCamera(
       -aspect * 10,
@@ -43,9 +44,12 @@ export default function CanvasComponent() {
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(width, height);
+
+    //stats setup
     const stats = Stats();
     stats.showPanel(0);
 
+    //adding elements to dom
     canvasRef.current?.appendChild(renderer.domElement);
     canvasRef.current?.appendChild(stats.dom);
 
@@ -55,8 +59,7 @@ export default function CanvasComponent() {
     scene.background = new THREE.Color(0.1, 0.1, 0.1);
 
     //Boids
-    const IS_MOBILE = globalThis.innerWidth < 768;
-    const numOfBoids = IS_MOBILE ? 300 : 750;
+    const numOfBoids = IS_MOBILE ? 300 : 500;
     boidManager.initBoids(scene, numOfBoids);
     boidManager.boids.forEach((boid) => {
       scene.add(boid.mesh);
@@ -79,7 +82,7 @@ export default function CanvasComponent() {
   return (
     <div
       id="canvas-container"
-      className="absolute top-0 bottom-0 left-0 h-[100vh] w-[100vw] z-10"
+      className="absolute top-0 bottom-0 left-0 h-[100vh] w-[100vw] z-10 overscroll-none"
       ref={canvasRef}
     >
     </div>
