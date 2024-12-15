@@ -4,6 +4,9 @@ import { ThreeContext } from "@/islands/canvas/ThreeProvider.tsx";
 import { useContext, useEffect, useRef } from "react-dom";
 import BoidManager from "@/lib/BoidManager.ts";
 
+// Import stats.js from a CDN
+import Stats from "https://cdn.jsdelivr.net/npm/three@0.132.2/examples/jsm/libs/stats.module.js";
+
 export default function CanvasComponent() {
   const three = useContext(ThreeContext);
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -40,8 +43,11 @@ export default function CanvasComponent() {
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(width, height);
+    const stats = Stats();
+    stats.showPanel(0);
 
     canvasRef.current?.appendChild(renderer.domElement);
+    canvasRef.current?.appendChild(stats.dom);
 
     //scene
     const scene = new THREE.Scene();
@@ -49,18 +55,22 @@ export default function CanvasComponent() {
     scene.background = new THREE.Color(0.1, 0.1, 0.1);
 
     //Boids
-    boidManager.initBoids(scene, 500);
+    const IS_MOBILE = globalThis.innerWidth < 768;
+    const numOfBoids = IS_MOBILE ? 300 : 750;
+    boidManager.initBoids(scene, numOfBoids);
     boidManager.boids.forEach((boid) => {
       scene.add(boid.mesh);
     });
 
     const animate = () => {
+      stats.begin();
       requestAnimationFrame(animate);
 
       const delta = clock.getDelta();
       boidManager.update(delta, bounds);
 
       renderer.render(scene, camera);
+      stats.end();
     };
 
     animate();
