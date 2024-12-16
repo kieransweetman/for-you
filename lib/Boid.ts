@@ -24,6 +24,7 @@ export default class Boid {
   isRefBoid?: boolean = false;
   lines: Map<number, THREE.Line>;
   boidRadius: number = 0.2;
+  applySeperationRule: boolean = true;
 
   constructor(
     scene: THREE.Scene,
@@ -223,13 +224,16 @@ export default class Boid {
     delta: number,
     bounds: { minX: number; maxX: number; minY: number; maxY: number },
     boids: Boid[],
+    separation: boolean,
   ) {
     this.counter++;
     this.wanderCounter++;
 
     // Apply separation force
-    const separationForce = this.separation(boids);
-    this.applyForce(separationForce);
+    if (separation) {
+      const separationForce = this.separation(boids);
+      this.applyForce(separationForce);
+    }
 
     // Update velocity and position
     this._velocity.add(this._acceleration);

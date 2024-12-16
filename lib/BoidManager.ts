@@ -7,9 +7,11 @@ type BoidType = "triangle" | "square";
 export default class BoidManager {
   boids: Boid[];
   boidType: BoidType = "square";
+  _applySeparationRule: boolean = true;
 
   constructor() {
     this.boids = [];
+    this._applySeparationRule = true;
   }
 
   update(
@@ -17,7 +19,6 @@ export default class BoidManager {
     bounds: { minX: number; maxX: number; minY: number; maxY: number },
   ) {
     for (const boid of this.boids) {
-      boid.update(delta, bounds, this.boids);
       // Check if any other boid is within the detection range
       this.boids.forEach((otherBoid) => {
         if (boid !== otherBoid) {
@@ -28,7 +29,17 @@ export default class BoidManager {
           }
         }
       });
+      boid.update(delta, bounds, this.boids, this.applySeparationRule);
     }
+  }
+
+  set applySeparationRule(apply: boolean) {
+    console.log(apply);
+    this._applySeparationRule = apply;
+  }
+
+  get applySeparationRule() {
+    return this._applySeparationRule;
   }
 
   initBoids(

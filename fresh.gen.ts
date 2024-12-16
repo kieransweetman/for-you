@@ -13,6 +13,7 @@ import * as $Counter from "./islands/Counter.tsx";
 import * as $MessageFormDialog from "./islands/MessageFormDialog.tsx";
 import * as $Typewriter from "./islands/Typewriter.tsx";
 import * as $TypewriterIntro from "./islands/TypewriterIntro.tsx";
+import * as $canvas_BoidSettingsBar from "./islands/canvas/BoidSettingsBar.tsx";
 import * as $canvas_CanvasComponent from "./islands/canvas/CanvasComponent.tsx";
 import * as $canvas_CanvasIsland from "./islands/canvas/CanvasIsland.tsx";
 import * as $canvas_ThreeProvider from "./islands/canvas/ThreeProvider.tsx";
@@ -33,6 +34,7 @@ const manifest = {
     "./islands/MessageFormDialog.tsx": $MessageFormDialog,
     "./islands/Typewriter.tsx": $Typewriter,
     "./islands/TypewriterIntro.tsx": $TypewriterIntro,
+    "./islands/canvas/BoidSettingsBar.tsx": $canvas_BoidSettingsBar,
     "./islands/canvas/CanvasComponent.tsx": $canvas_CanvasComponent,
     "./islands/canvas/CanvasIsland.tsx": $canvas_CanvasIsland,
     "./islands/canvas/ThreeProvider.tsx": $canvas_ThreeProvider,
