@@ -19,8 +19,11 @@ export default class Boid {
   _maxSpeed: number;
   counter: number;
   wanderCounter: number;
-  detectionRadius?: number;
+  detectionRadius: number;
   detectionCircle?: THREE.Mesh;
+  viewingRadius: number = 1;
+  cohesionWeight: number = .5;
+
   isRefBoid?: boolean = false;
   lines: Map<number, THREE.Line>;
   boidRadius: number = 0.2;
@@ -95,6 +98,13 @@ export default class Boid {
     return distance <= combinedRadius;
   }
 
+  isInCohesionRange(otherBoid: Boid): boolean {
+    const distance = this.mesh.position.distanceTo(otherBoid.mesh.position);
+    const combinedRadius = this.viewingRadius * this.cohesionWeight +
+      otherBoid.boidRadius;
+    return distance <= combinedRadius;
+  }
+
   // Method to draw a line between the reference boid and the foreign boid
   drawLineTo(otherBoid: Boid) {
     if (!this.isRefBoid) return;
@@ -121,70 +131,6 @@ export default class Boid {
       this._scene.remove(this.lines.get(otherBoid)!);
       this.lines.delete(otherBoid);
     }
-  }
-
-  get scene() {
-    return this._scene;
-  }
-
-  set scene(scene) {
-    this._scene = scene;
-  }
-
-  get mesh() {
-    return this._mesh;
-  }
-
-  set mesh(mesh) {
-    this._mesh = mesh;
-  }
-
-  get geometry() {
-    return this._geometry;
-  }
-
-  set geometry(geometry) {
-    this._geometry = geometry;
-  }
-
-  get target() {
-    return this._target;
-  }
-
-  set target(target) {
-    this._target = target;
-  }
-
-  set position(position) {
-    this._position = position;
-  }
-
-  get position() {
-    return this._position;
-  }
-
-  set velocity(velocity) {
-    this._velocity = velocity;
-  }
-
-  get velocity() {
-    return this._velocity;
-  }
-
-  set acceleration(acceleration) {
-    this._acceleration = acceleration;
-  }
-
-  get acceleration() {
-    return this._acceleration;
-  }
-
-  get maxForce() {
-    return this._maxForce;
-  }
-
-  get maxSpeed() {
-    return this._maxSpeed;
   }
 
   // Method to apply a force to the boid
@@ -262,7 +208,7 @@ export default class Boid {
     let posXAvg = 0;
     let posYAvg = 0;
     for (const other of boids) {
-      if (other !== this && this.isInViewingRange(other)) {
+      if (other !== this && this.isInCohesionRange(other)) {
         posXAvg += other.mesh.position.x;
         posYAvg += other.mesh.position.y;
         count++;
@@ -354,5 +300,69 @@ export default class Boid {
     // Rotate the boid to face the direction of its velocity
     const angle = Math.atan2(this._velocity.y, this._velocity.x);
     this._mesh.rotation.z = angle - Math.PI / 2;
+  }
+
+  get scene() {
+    return this._scene;
+  }
+
+  set scene(scene) {
+    this._scene = scene;
+  }
+
+  get mesh() {
+    return this._mesh;
+  }
+
+  set mesh(mesh) {
+    this._mesh = mesh;
+  }
+
+  get geometry() {
+    return this._geometry;
+  }
+
+  set geometry(geometry) {
+    this._geometry = geometry;
+  }
+
+  get target() {
+    return this._target;
+  }
+
+  set target(target) {
+    this._target = target;
+  }
+
+  set position(position) {
+    this._position = position;
+  }
+
+  get position() {
+    return this._position;
+  }
+
+  set velocity(velocity) {
+    this._velocity = velocity;
+  }
+
+  get velocity() {
+    return this._velocity;
+  }
+
+  set acceleration(acceleration) {
+    this._acceleration = acceleration;
+  }
+
+  get acceleration() {
+    return this._acceleration;
+  }
+
+  get maxForce() {
+    return this._maxForce;
+  }
+
+  get maxSpeed() {
+    return this._maxSpeed;
   }
 }
