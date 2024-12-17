@@ -89,6 +89,12 @@ export default class Boid {
     return distance <= combinedRadius;
   }
 
+  isInViewingRange(otherBoid: Boid): boolean {
+    const distance = this.mesh.position.distanceTo(otherBoid.mesh.position);
+    const combinedRadius = this.viewingRadius + otherBoid.boidRadius;
+    return distance <= combinedRadius;
+  }
+
   // Method to draw a line between the reference boid and the foreign boid
   drawLineTo(otherBoid: Boid) {
     if (!this.isRefBoid) return;
@@ -219,12 +225,87 @@ export default class Boid {
     return steer;
   }
 
+  applyAlignment(angle: THREE.Vector3) {
+    this.acceleration.add(angle);
+  }
+
+  // Method to calculate the alignment force
+  align(boids: Boid[]): THREE.Vector3 {
+    const steer = new THREE.Vector3();
+
+    let count = 0;
+    for (const other of boids) {
+      if (other !== this && this.isInViewingRange(other)) {
+        steer.add(other.velocity);
+        count++;
+      }
+    }
+
+    if (count > 0) {
+      steer.divideScalar(count);
+    }
+
+    if (steer.length() > 0) {
+      steer.normalize();
+      steer.multiplyScalar(this._maxSpeed);
+      steer.sub(this._velocity);
+      steer.clampLength(0, this._maxForce);
+    }
+
+    return steer;
+  }
+
+  cohesion(boids: Boid[]): THREE.Vector3 {
+    const steer = new THREE.Vector3();
+    let count = 0;
+
+    let posXAvg = 0;
+    let posYAvg = 0;
+    for (const other of boids) {
+      if (other !== this && this.isInViewingRange(other)) {
+        posXAvg += other.mesh.position.x;
+        posYAvg += other.mesh.position.y;
+        count++;
+      }
+    }
+
+    if (count > 0) {
+      posXAvg /= count;
+      posYAvg /= count;
+
+      const target = new THREE.Vector3(posXAvg, posYAvg, 0);
+      const desired = target.sub(this.mesh.position);
+      desired.normalize();
+      desired.multiplyScalar(this._maxSpeed);
+      steer.subVectors(desired, this._velocity);
+      steer.clampLength(0, this._maxForce);
+      steer.divideScalar(count);
+    }
+
+    if (steer.length() > 0) {
+      steer.normalize();
+      steer.multiplyScalar(this._maxSpeed);
+      steer.sub(this._velocity);
+      steer.clampLength(0, this._maxForce);
+    }
+
+    return steer;
+  }
+
+  applyCohesion(angle: THREE.Vector3) {
+    this.acceleration.add(angle);
+  }
+
   // Updated method to include separation rule
   update(
     delta: number,
     bounds: { minX: number; maxX: number; minY: number; maxY: number },
     boids: Boid[],
-    separation: boolean,
+    { separation, alignment, cohesion }: {
+      separation: boolean;
+      alignment: boolean;
+      cohesion: boolean;
+    },
   ) {
     this.counter++;
     this.wanderCounter++;
@@ -233,6 +314,17 @@ export default class Boid {
     if (separation) {
       const separationForce = this.separation(boids);
       this.applyForce(separationForce);
+    }
+    if (alignment) {
+      // Apply alignment force
+      const alignMentForce = this.align(boids);
+      this.applyAlignment(alignMentForce);
+    }
+
+    if (cohesion) {
+      // Apply cohesion force
+      const cohesionForce = this.cohesion(boids);
+      this.applyCohesion(cohesionForce);
     }
 
     // Update velocity and position

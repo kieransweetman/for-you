@@ -8,6 +8,8 @@ export default class BoidManager {
   boids: Boid[];
   boidType: BoidType = "square";
   _applySeparationRule: boolean = true;
+  _applyAlignmentRule: boolean = true;
+  _applyCohesionRule: boolean = true;
 
   constructor() {
     this.boids = [];
@@ -29,17 +31,43 @@ export default class BoidManager {
           }
         }
       });
-      boid.update(delta, bounds, this.boids, this.applySeparationRule);
+
+      const rules = {
+        separation: this._applySeparationRule,
+        alignment: this._applyAlignmentRule,
+        cohesion: this._applyCohesionRule,
+      };
+      boid.update(
+        delta,
+        bounds,
+        this.boids,
+        rules,
+      );
     }
   }
 
   set applySeparationRule(apply: boolean) {
-    console.log(apply);
     this._applySeparationRule = apply;
   }
 
   get applySeparationRule() {
     return this._applySeparationRule;
+  }
+
+  set applyAlignmentRule(apply: boolean) {
+    this._applyAlignmentRule = apply;
+  }
+
+  get applyAlignmentRule() {
+    return this._applyAlignmentRule;
+  }
+
+  set applyCohesionRule(apply: boolean) {
+    this._applyCohesionRule = apply;
+  }
+
+  get applyCohesionRule() {
+    return this._applyCohesionRule;
   }
 
   initBoids(
@@ -57,6 +85,7 @@ export default class BoidManager {
       // reference boid
 
       if (i === 0) {
+        continue;
         // reference boid is red
         color = 0xff0000;
         const isRefBoid = true;

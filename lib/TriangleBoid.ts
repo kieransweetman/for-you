@@ -58,22 +58,33 @@ export default class TriangleBoid extends Boid {
     const mesh = new THREE.Mesh(geometry, material);
 
     // Create the detection circle outline
-    const circleGeometry = new THREE.CircleGeometry(.5, 32); // Adjust the radius as needed
+    const separationCicle = new THREE.CircleGeometry(.5, 32); // Adjust the radius as needed
+    const alignmentCircle = new THREE.CircleGeometry(1, 32); // Adjust the radius as needed
+
     this.detectionRadius = .5;
-    const edgesGeometry = new THREE.EdgesGeometry(circleGeometry);
+    this.viewingRadius = 1;
+    const separationEdgesGeometry = new THREE.EdgesGeometry(separationCicle);
+    const alignmentEdgesGeometry = new THREE.EdgesGeometry(alignmentCircle);
     const edgesMaterial = new THREE.LineBasicMaterial({
       color: 0xffff00,
       transparent: true,
       opacity: 0.5,
     });
-    const detectionCircle = new THREE.LineSegments(
-      edgesGeometry,
+    const separationDetectionCircle = new THREE.LineSegments(
+      separationEdgesGeometry,
       edgesMaterial,
     );
-    detectionCircle.position.z = -0.01; // Slightly behind the boid to avoid z-fighting
+    const alignmentDetectionCircle = new THREE.LineSegments(
+      alignmentEdgesGeometry,
+      edgesMaterial,
+    );
+
+    separationDetectionCircle.position.z = -0.01; // Slightly behind the boid to avoid z-fighting
+    alignmentDetectionCircle.position.z = -0.01; // Slightly behind the boid to avoid z-fighting
 
     if (this.isRefBoid) {
-      mesh.add(detectionCircle);
+      mesh.add(separationDetectionCircle);
+      mesh.add(alignmentDetectionCircle);
     }
 
     return { mesh, geometry };

@@ -8,16 +8,7 @@ import BoidSettingsBar from "@/islands/canvas/BoidSettingsBar.tsx";
 // Import stats.js from a CDN
 import Stats from "https://cdn.jsdelivr.net/npm/three@0.132.2/examples/jsm/libs/stats.module.js";
 
-const width = globalThis.innerWidth;
-const height = globalThis.innerHeight;
-const aspect = width / height;
-const IS_MOBILE = width < 768;
-const bounds = {
-  minX: -aspect * 10,
-  maxX: aspect * 10,
-  minY: -10,
-  maxY: 10,
-};
+import { aspect, bounds, height, IS_MOBILE, width } from "@/lib/common.ts";
 
 const boidManager = new BoidManager();
 
@@ -60,7 +51,7 @@ export default function CanvasComponent() {
     scene.background = new THREE.Color(0.1, 0.1, 0.1);
 
     //Boids
-    const numOfBoids = IS_MOBILE ? 50 : 450;
+    const numOfBoids = IS_MOBILE ? 100 : 450;
     const boidType = "triangle";
     boidManager.initBoids(scene, numOfBoids, boidType);
     boidManager.boids.forEach((boid) => {
@@ -81,15 +72,6 @@ export default function CanvasComponent() {
     animate();
   }, [canvasRef]);
 
-  const [isChecked, setIsChecked] = useState(true);
-
-  const handleSetIsChecked = (e) => {
-    boidManager.applySeparationRule = e.target.checked;
-    boidManager.update(clock.getDelta(), bounds);
-    setIsChecked(e.target.checked);
-    return;
-  };
-
   return (
     <div
       id="canvas-container"
@@ -97,8 +79,8 @@ export default function CanvasComponent() {
       ref={canvasRef}
     >
       <BoidSettingsBar
-        handleSetIsChecked={handleSetIsChecked}
-        isChecked={isChecked}
+        clock={clock}
+        boidManager={boidManager}
       />
     </div>
   );
