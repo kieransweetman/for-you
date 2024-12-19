@@ -1,7 +1,7 @@
 import * as THREE from "@3d/three";
-import { ThreeContext } from "@/islands/canvas/ThreeProvider.tsx";
 
-import { useContext, useEffect, useRef, useState } from "react-dom";
+import { render, useContext, useEffect, useRef } from "react-dom";
+import { ThreeContext } from "@/islands/canvas/ThreeProvider.tsx";
 import BoidManager from "@/lib/BoidManager.ts";
 import BoidSettingsBar from "@/islands/canvas/BoidSettingsBar.tsx";
 
@@ -13,42 +13,41 @@ import { aspect, bounds, height, IS_MOBILE, width } from "@/lib/common.ts";
 const boidManager = new BoidManager();
 
 export default function CanvasComponent() {
-  const three = useContext(ThreeContext);
   const canvasRef = useRef<HTMLDivElement>(null);
+  const threeCanvasContext = useContext(ThreeContext);
   const clock = new THREE.Clock();
+  const mouse = new THREE.Vector2();
 
-  if (!three) return <div>Component placeholder</div>;
+  if (!threeCanvasContext) return null;
 
-  useEffect(() => {
-    // camera
-    const camera = new THREE.OrthographicCamera(
-      -aspect * 10,
-      aspect * 10,
-      10,
-      -10,
-      0.1,
-      1000,
-    );
-
+  const initCanvasSettings = (
+    camera: THREE.Camera,
+    scene: THREE.Scene,
+    renderer: THREE.WebGLRenderer,
+  ) => {
     // @ts-ignore: `position` does not exist, but it does. not sure why
     // TODO understand type error & fix
     camera.position.z = 10;
-
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(width, height);
+    scene.background = new THREE.Color(0.1, 0.1, 0.1);
+
+    canvasRef.current?.appendChild(renderer.domElement);
+  };
+
+  useEffect(() => {
+    if (!canvasRef.current) return;
+
+    const { camera, renderer, scene } = threeCanvasContext;
+    initCanvasSettings(camera, scene, renderer);
 
     //stats setup
     const stats = Stats();
     stats.showPanel(0);
 
     //adding elements to dom
-    canvasRef.current?.appendChild(renderer.domElement);
     canvasRef.current?.appendChild(stats.dom);
 
-    //scene
-    const scene = new THREE.Scene();
     // to slight gray
-    scene.background = new THREE.Color(0.1, 0.1, 0.1);
 
     //Boids
     const numOfBoids = IS_MOBILE ? 100 : 450;
@@ -58,12 +57,41 @@ export default function CanvasComponent() {
       scene.add(boid.mesh);
     });
 
+    const raycaster = new THREE.Raycaster();
+
+    const onMouseMove = (event) => {
+      // calculate mouse position in normalized device coordinates
+      // (-1 to +1) for both components
+      mouse.x = (event.clientX / globalThis.innerWidth) * 2 - 1;
+      mouse.y = -(event.clientY / globalThis.innerHeight) * 2 + 1;
+    };
+
+    globalThis.addEventListener("mousemove", onMouseMove, false);
+
     const animate = () => {
       stats.begin();
       requestAnimationFrame(animate);
 
       const delta = clock.getDelta();
       boidManager.update(delta, bounds);
+
+      // Update the picking ray with the camera and mouse position
+      raycaster.setFromCamera(mouse, camera);
+
+      // Reset color of all boids
+      boidManager.boids.forEach((boid) => {
+        boid.mesh.material.color.set(0xffffff); // Reset to original color (white)
+      });
+
+      // // Calculate objects intersecting the ray
+      const intersects = raycaster.intersectObjects(
+        scene.children,
+      );
+
+      // // Change color of intersected objects
+      for (let i = 0; i < intersects.length; i++) {
+        intersects[i].object.material.color.set(0xff0000); // Change to red
+      }
 
       renderer.render(scene, camera);
       stats.end();

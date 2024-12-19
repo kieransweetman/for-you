@@ -7,6 +7,12 @@ const width = globalThis.innerWidth;
 const height = globalThis.innerHeight;
 const aspect = width / height;
 
+type RangeStrategy = {
+  separation?: Boid["detectionRadius"];
+  alignment?: Boid["viewingRadius"];
+  cohesion?: Boid["viewingRadius"];
+};
+
 export default class Boid {
   _scene: any;
   _target: any;
@@ -85,24 +91,25 @@ export default class Boid {
     return { mesh: this.mesh, geometry: this.geometry };
   }
 
-  // Method to check if another boid is within the detection radius
-  isWithinDetectionRange(otherBoid: Boid): boolean {
-    const distance = this.mesh.position.distanceTo(otherBoid.mesh.position);
-    const combinedRadius = this.detectionRadius + otherBoid.boidRadius;
-    return distance <= combinedRadius;
-  }
+  isInRange(otherBoid: Boid, type: RangeStrategy): boolean {
+    const { separation, alignment, cohesion } = type;
 
-  isInViewingRange(otherBoid: Boid): boolean {
     const distance = this.mesh.position.distanceTo(otherBoid.mesh.position);
-    const combinedRadius = this.viewingRadius + otherBoid.boidRadius;
-    return distance <= combinedRadius;
-  }
+    let combinedRadius;
+    if (separation) {
+      combinedRadius = this.detectionRadius + otherBoid.boidRadius;
+    }
 
-  isInCohesionRange(otherBoid: Boid): boolean {
-    const distance = this.mesh.position.distanceTo(otherBoid.mesh.position);
-    const combinedRadius = this.viewingRadius * this.cohesionWeight +
-      otherBoid.boidRadius;
-    return distance <= combinedRadius;
+    if (alignment) {
+      combinedRadius = this.viewingRadius + otherBoid.boidRadius;
+    }
+
+    if (cohesion) {
+      combinedRadius = this.viewingRadius * this.cohesionWeight +
+        otherBoid.boidRadius;
+    }
+
+    return distance <= combinedRadius!;
   }
 
   // Method to draw a line between the reference boid and the foreign boid
@@ -144,7 +151,10 @@ export default class Boid {
     let count = 0;
 
     for (const other of boids) {
-      if (other !== this && this.isWithinDetectionRange(other)) {
+      if (
+        other !== this &&
+        this.isInRange(other, { separation: this.detectionRadius })
+      ) {
         const distance = this.mesh.position.distanceTo(other.mesh.position);
         const diff = new THREE.Vector3().subVectors(
           this.mesh.position,
@@ -181,7 +191,10 @@ export default class Boid {
 
     let count = 0;
     for (const other of boids) {
-      if (other !== this && this.isInViewingRange(other)) {
+      if (
+        other !== this &&
+        this.isInRange(other, { alignment: this.viewingRadius })
+      ) {
         steer.add(other.velocity);
         count++;
       }
@@ -208,7 +221,10 @@ export default class Boid {
     let posXAvg = 0;
     let posYAvg = 0;
     for (const other of boids) {
-      if (other !== this && this.isInCohesionRange(other)) {
+      if (
+        other !== this &&
+        this.isInRange(other, { cohesion: this.viewingRadius })
+      ) {
         posXAvg += other.mesh.position.x;
         posYAvg += other.mesh.position.y;
         count++;

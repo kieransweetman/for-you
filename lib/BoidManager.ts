@@ -24,7 +24,7 @@ export default class BoidManager {
       // Check if any other boid is within the detection range
       this.boids.forEach((otherBoid) => {
         if (boid !== otherBoid) {
-          if (boid.isWithinDetectionRange(otherBoid)) {
+          if (boid.isInRange(otherBoid, { separation: boid.detectionRadius })) {
             boid.drawLineTo(otherBoid);
           } else {
             boid.removeLineTo(otherBoid);
@@ -37,6 +37,7 @@ export default class BoidManager {
         alignment: this._applyAlignmentRule,
         cohesion: this._applyCohesionRule,
       };
+
       boid.update(
         delta,
         bounds,
